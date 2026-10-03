@@ -1,0 +1,6 @@
+{
+  "name": "ZYLE — Curated Modern Artifacts",
+  "description": "Apple-grade luxury e-commerce for curated watches, precision audio, outerwear, and wardrobe essentials with direct atelier fulfillment.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
