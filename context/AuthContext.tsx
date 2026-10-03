@@ -24,29 +24,25 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  // Hydrate user from secure local storage
-  useEffect(() => {
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    if (typeof window === 'undefined') return null;
     try {
       const stored = localStorage.getItem('zyle_auth_vault');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed && (parsed.email || parsed.phone)) {
-          setUser(parsed);
+          return parsed;
         }
       }
     } catch (e) {
       console.error('Error hydrating auth state:', e);
     }
-    setIsMounted(true);
-  }, []);
+    return null;
+  });
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
 
   // Persist user to local storage
   useEffect(() => {
-    if (!isMounted) return;
     try {
       if (user) {
         localStorage.setItem('zyle_auth_vault', JSON.stringify(user));
@@ -56,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error('Error persisting auth state:', e);
     }
-  }, [user, isMounted]);
+  }, [user]);
 
   const login = async (email: string, password: string) => {
     try {

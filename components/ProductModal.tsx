@@ -18,6 +18,7 @@ import {
 import { Product } from '@/lib/types';
 import { useCart } from '@/context/CartContext';
 import { parseSizes } from '@/lib/csvLoader';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface ProductModalProps {
   product: Product | null;
@@ -227,12 +228,22 @@ function ProductModalInner({ product, onClose }: { product: Product; onClose: ()
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/60 backdrop-blur-sm animate-fade-in max-w-full">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/60 backdrop-blur-sm max-w-full"
+    >
       {/* Backdrop click area */}
       <div className="fixed inset-0 -z-10" onClick={onClose} />
 
-      <div
-        className="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col md:flex-row overflow-hidden shadow-2xl border border-neutral-200 relative my-auto animate-scale-up"
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        className="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col md:flex-row overflow-hidden shadow-2xl border border-neutral-200 relative my-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -549,12 +560,17 @@ function ProductModalInner({ product, onClose }: { product: Product; onClose: ()
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 export default function ProductModal({ product, onClose }: ProductModalProps) {
-  if (!product) return null;
-  return <ProductModalInner key={product.id} product={product} onClose={onClose} />;
+  return (
+    <AnimatePresence>
+      {product && (
+        <ProductModalInner key={product.id} product={product} onClose={onClose} />
+      )}
+    </AnimatePresence>
+  );
 }

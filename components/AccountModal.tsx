@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import {
   X,
-  ShieldCheck,
   MapPin,
   RefreshCw,
   LogOut,
@@ -21,82 +20,64 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
-import { PincodeData } from '@/lib/types';
+import { PincodeData, UserProfile } from '@/lib/types';
 import AuthModal from './AuthModal';
 import { CustomerOrder } from '@/app/api/orders/user/route';
 
-export default function AccountModal() {
-  const {
-    user,
-    isAuthenticated,
-    isAccountModalOpen,
-    closeAccountModal,
-    updateProfile,
-    verifyPincode,
-    logout,
-  } = useAuth();
+interface AccountDashboardProps {
+  user: UserProfile;
+  onClose: () => void;
+}
 
+function AccountDashboardContent({ user, onClose }: AccountDashboardProps) {
+  const { updateProfile, verifyPincode, logout } = useAuth();
   const { updateCustomerDetails, openWishlist, wishlist, formatPrice } = useCart();
 
   // Dashboard Tabs
   const [activeTab, setActiveTab] = useState<'tracking' | 'address'>('tracking');
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
-  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
   const [copiedTracking, setCopiedTracking] = useState<string | null>(null);
 
   // Address edit state
-  const [name, setName] = useState(user?.name || '');
-  const [address, setAddress] = useState(user?.address || '');
-  const [pincode, setPincode] = useState(user?.pincode || '');
-  const [city, setCity] = useState(user?.city || '');
-  const [stateName, setStateName] = useState(user?.state || '');
+  const [name, setName] = useState(user.name || '');
+  const [address, setAddress] = useState(user.address || '');
+  const [pincode, setPincode] = useState(user.pincode || '');
+  const [city, setCity] = useState(user.city || '');
+  const [stateName, setStateName] = useState(user.state || '');
   const [pincodeStatus, setPincodeStatus] = useState<PincodeData | null>(null);
   const [isCheckingPincode, setIsCheckingPincode] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
-  // Sync profile fields
+  // Fetch orders on mount
   useEffect(() => {
-    if (user) {
-      setName(user.name || '');
-      setAddress(user.address || '');
-      setPincode(user.pincode || '');
-      setCity(user.city || '');
-      setStateName(user.state || '');
-    }
-  }, [user]);
+    let isMounted = true;
+    const query = new URLSearchParams();
+    if (user.email) query.set('email', user.email);
+    if (user.phone) query.set('phone', user.phone);
 
-  // Fetch orders when open and authenticated
-  useEffect(() => {
-    if (isAccountModalOpen && isAuthenticated && user) {
-      setLoadingOrders(true);
-      const query = new URLSearchParams();
-      if (user.email) query.set('email', user.email);
-      if (user.phone) query.set('phone', user.phone);
-
-      fetch(`/api/orders/user?${query.toString()}`)
-        .then(r => r.json())
-        .then(data => {
-          if (data.success && Array.isArray(data.orders)) {
-            setOrders(data.orders);
-            if (data.orders.length > 0) {
-              setSelectedOrder(data.orders[0]);
-            }
+    fetch(`/api/orders/user?${query.toString()}`)
+      .then(r => r.json())
+      .then(data => {
+        if (isMounted && data.success && Array.isArray(data.orders)) {
+          setOrders(data.orders);
+          if (data.orders.length > 0) {
+            setSelectedOrder(data.orders[0]);
           }
-        })
-        .catch(err => console.warn('Could not load orders:', err))
-        .finally(() => setLoadingOrders(false));
-    }
-  }, [isAccountModalOpen, isAuthenticated, user]);
+        }
+      })
+      .catch(err => console.warn('Could not load orders:', err))
+      .finally(() => {
+        if (isMounted) setLoadingOrders(false);
+      });
 
-  if (!isAccountModalOpen) return null;
+    return () => {
+      isMounted = false;
+    };
+  }, [user.email, user.phone]);
 
-  // Unauthenticated -> Show Email + Password Auth Modal
-  if (!isAuthenticated) {
-    return <AuthModal isOpen={isAccountModalOpen} onClose={closeAccountModal} />;
-  }
-
-  // Handle Pincode Check
+  // Handle Indian Pincode Check
   const handlePincodeChange = async (val: string) => {
     const clean = val.replace(/\D/g, '').slice(0, 6);
     setPincode(clean);
@@ -145,7 +126,7 @@ export default function AccountModal() {
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs animate-fade-in max-w-full">
-      <div className="fixed inset-0 -z-10" onClick={closeAccountModal} />
+      <div className="fixed inset-0 -z-10" onClick={onClose} />
 
       <div
         className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl border border-stone-200 relative animate-scale-up max-h-[92vh] flex flex-col"
@@ -155,12 +136,12 @@ export default function AccountModal() {
         <div className="p-4 sm:p-5 border-b border-stone-100 flex items-center justify-between bg-[#FAF9F5] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-stone-900 text-white flex items-center justify-center font-medium text-sm">
-              {user?.name ? user.name[0].toUpperCase() : 'U'}
+              {user.name ? user.name[0].toUpperCase() : 'U'}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-semibold text-stone-900">
-                  {user?.name || 'Customer Account'}
+                  {user.name || 'Customer Account'}
                 </h2>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-medium border border-emerald-200/60">
                   <UserCheck className="w-3 h-3 text-emerald-600" />
@@ -168,7 +149,7 @@ export default function AccountModal() {
                 </span>
               </div>
               <p className="text-xs text-stone-500 font-normal">
-                {user?.email || `+91 ${user?.phone}`}
+                {user.email || `+91 ${user.phone}`}
               </p>
             </div>
           </div>
@@ -183,7 +164,7 @@ export default function AccountModal() {
               <span className="hidden sm:inline">Sign Out</span>
             </button>
             <button
-              onClick={closeAccountModal}
+              onClick={onClose}
               className="p-2 text-stone-400 hover:text-stone-900 rounded-full hover:bg-stone-200/50 transition-colors cursor-pointer"
               aria-label="Close dialog"
             >
@@ -522,7 +503,7 @@ export default function AccountModal() {
           <span className="text-stone-500">Saved Wishlist</span>
           <button
             onClick={() => {
-              closeAccountModal();
+              onClose();
               openWishlist();
             }}
             className="inline-flex items-center gap-1.5 text-stone-900 hover:text-black font-medium cursor-pointer"
@@ -535,4 +516,23 @@ export default function AccountModal() {
       </div>
     </div>
   );
+}
+
+export default function AccountModal() {
+  const {
+    user,
+    isAuthenticated,
+    isAccountModalOpen,
+    closeAccountModal,
+  } = useAuth();
+
+  if (!isAccountModalOpen) return null;
+
+  // Unauthenticated -> Show Email + Password Auth Modal
+  if (!isAuthenticated || !user) {
+    return <AuthModal isOpen={isAccountModalOpen} onClose={closeAccountModal} />;
+  }
+
+  // Authenticated -> Show Customer Account & Order Tracking Dashboard
+  return <AccountDashboardContent user={user} onClose={closeAccountModal} />;
 }

@@ -55,6 +55,7 @@ export interface OrderLead {
 }
 
 export interface UserProfile {
+  id?: string;
   phone: string;
   isVerified: boolean;
   name?: string;
