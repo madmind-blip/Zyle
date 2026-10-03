@@ -230,12 +230,12 @@ export default function Navbar({
             )}
           </div>
 
-          {/* Account Vault / Sign-In Button */}
+          {/* Customer Account & Order Tracking Button */}
           <button
             onClick={openAccountModal}
             className="p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100/80 rounded-full transition-colors relative cursor-pointer"
-            aria-label={isAuthenticated ? 'Account Vault' : 'Sign in'}
-            title={isAuthenticated ? 'Client Account Vault' : 'Mobile Number Sign-In'}
+            aria-label={isAuthenticated ? 'Account & Order Tracking' : 'Sign in'}
+            title={isAuthenticated ? 'Customer Account & Order Tracking' : 'Customer Sign In / Register'}
           >
             <User className="w-4 h-4" />
             {isAuthenticated && (

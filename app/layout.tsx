@@ -27,7 +27,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="preconnect" href="https://use.typekit.net" crossOrigin="anonymous" />
-        <link rel="stylesheet" href="https://use.typekit.net/hoz7yea.css?v=4" />
+        <link rel="stylesheet" href="https://use.typekit.net/hoz7yea.css?v=5" />
       </head>
       <body className="bg-[#FAF9F5] text-stone-900 antialiased overflow-x-hidden">
         <AuthProvider>

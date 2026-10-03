@@ -1,30 +1,29 @@
-@import url("https://use.typekit.net/hoz7yea.css?v=4");
+@import url("https://use.typekit.net/hoz7yea.css?v=5");
 @import "tailwindcss";
 
 @layer base {
   :root {
-    --font-display: "neue-haas-grotesk-display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --font-text: "neue-haas-grotesk-text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-degular: "degular", "degular-display", "degular-text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-display: var(--font-degular);
+    --font-text: var(--font-degular);
   }
 
   html, body {
-    font-family: var(--font-text) !important;
-    background-color: #FAF9F5;
+    font-family: var(--font-degular) !important;
+    font-weight: 400;
     color: #1C1917;
+    background-color: #FAF9F5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
     overflow-x: hidden;
   }
 
-  /* Large Display Titles & Brand */
-  h1, .font-display, .brand-logo {
-    font-family: var(--font-display) !important;
-    letter-spacing: -0.025em;
-  }
-
-  /* Catalog, Product Titles, UI, and Body */
-  h2, h3, h4, h5, h6, p, span, a, button, input, select, label {
-    font-family: var(--font-text) !important;
+  /* Universal element inheritance */
+  *, *::before, *::after,
+  h1, h2, h3, h4, h5, h6,
+  p, span, a, button, input, textarea, select, label {
+    font-family: var(--font-degular) !important;
   }
 }
 

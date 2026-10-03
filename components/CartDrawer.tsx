@@ -504,7 +504,7 @@ export default function CartDrawer() {
                                   onClick={openAccountModal}
                                   className="text-[10px] text-amber-700 hover:text-amber-900 underline cursor-pointer"
                                 >
-                                  Verify OTP
+                                  Sign In / Register
                                 </button>
                               )}
                             </div>

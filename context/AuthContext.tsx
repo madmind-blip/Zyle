@@ -9,8 +9,13 @@ interface AuthContextType {
   isAccountModalOpen: boolean;
   openAccountModal: () => void;
   closeAccountModal: () => void;
-  sendOtp: (phone: string) => Promise<{ success: boolean; demoOtp?: string; error?: string }>;
-  verifyOtp: (phone: string, otp: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (data: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+  }) => Promise<{ success: boolean; error?: string }>;
   updateProfile: (details: Partial<UserProfile>) => void;
   verifyPincode: (pincode: string) => Promise<PincodeData>;
   logout: () => void;
@@ -25,25 +30,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Hydrate user from secure local storage
   useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        const stored = localStorage.getItem('zyle_auth_vault');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed && parsed.phone && parsed.isVerified) {
-            setUser(parsed);
-          }
+    try {
+      const stored = localStorage.getItem('zyle_auth_vault');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && (parsed.email || parsed.phone)) {
+          setUser(parsed);
         }
-      } catch (e) {
-        console.error('Error hydrating auth state:', e);
       }
-      setIsMounted(true);
-    }, 0);
-
-    return () => clearTimeout(timer);
+    } catch (e) {
+      console.error('Error hydrating auth state:', e);
+    }
+    setIsMounted(true);
   }, []);
 
-  // Persist user to secure local vault
+  // Persist user to local storage
   useEffect(() => {
     if (!isMounted) return;
     try {
@@ -57,57 +58,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, isMounted]);
 
-  const sendOtp = async (phone: string) => {
+  const login = async (email: string, password: string) => {
     try {
-      const res = await fetch('/api/auth/otp', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'send', phone }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        return { success: false, error: data.error || 'Failed to send OTP' };
-      }
-      return { success: true, demoOtp: data.demoOtp };
-    } catch (err) {
-      console.error('Error in sendOtp:', err);
-      return { success: false, error: 'Network error communicating with OTP service' };
-    }
-  };
-
-  const verifyOtp = async (phone: string, otp: string) => {
-    try {
-      const res = await fetch('/api/auth/otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'verify', phone, otp }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        return { success: false, error: data.error || 'Invalid OTP code' };
+        return { success: false, error: data.error || 'Failed to sign in' };
       }
 
-      // Successful verification -> update user state or create profile
-      setUser(prev => {
-        const updated: UserProfile = {
-          phone: data.phone,
-          isVerified: true,
-          verifiedAt: data.verifiedAt,
-          name: prev?.name || '',
-          address: prev?.address || '',
-          city: prev?.city || '',
-          district: prev?.district || '',
-          state: prev?.state || '',
-          pincode: prev?.pincode || '',
-          savedAddresses: prev?.savedAddresses || [],
-        };
-        return updated;
+      setUser({
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        phone: data.user.phone || '',
+        isVerified: true,
+        verifiedAt: new Date().toISOString(),
       });
 
       return { success: true };
-    } catch (err) {
-      console.error('Error in verifyOtp:', err);
-      return { success: false, error: 'Network error during verification' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error during sign-in' };
+    }
+  };
+
+  const register = async (formData: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+  }) => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Failed to create account' };
+      }
+
+      setUser({
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        phone: data.user.phone || '',
+        isVerified: true,
+        verifiedAt: new Date().toISOString(),
+      });
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error during registration' };
     }
   };
 
@@ -146,12 +152,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: Boolean(user && user.isVerified),
+        isAuthenticated: Boolean(user && (user.email || user.isVerified)),
         isAccountModalOpen,
         openAccountModal: () => setIsAccountModalOpen(true),
         closeAccountModal: () => setIsAccountModalOpen(false),
-        sendOtp,
-        verifyOtp,
+        login,
+        register,
         updateProfile,
         verifyPincode,
         logout,
