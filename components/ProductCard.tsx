@@ -23,7 +23,12 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isOutOfStock) return;
-    const added = addToCart(product, product.sizes[0] || 'Free Size', 1);
+    const firstSize = Array.isArray(product.sizes)
+      ? product.sizes[0] || 'Free Size'
+      : typeof product.sizes === 'string'
+      ? product.sizes.split(',')[0]?.trim() || 'Free Size'
+      : 'Free Size';
+    const added = addToCart(product, firstSize, 1);
     if (added) {
       setIsAdded(true);
       setTimeout(() => setIsAdded(false), 1800);
@@ -169,13 +174,20 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
           </div>
 
           {/* Product Name */}
-          <h3 className="text-xs sm:text-sm font-normal text-neutral-900 line-clamp-2 leading-relaxed min-h-[2.5rem] group-hover:text-neutral-600 transition-colors mb-1.5">
+          <h3
+            className="text-xs sm:text-sm font-normal text-neutral-900 line-clamp-2 leading-relaxed min-h-[2.5rem] group-hover:text-neutral-600 transition-colors mb-1.5"
+            title={product.name}
+          >
             {product.name}
           </h3>
 
           {/* Available sizes */}
           <div className="text-[10px] sm:text-[11px] text-neutral-500 mb-2 truncate font-normal">
-            {product.sizes.join(' · ')}
+            {Array.isArray(product.sizes)
+              ? product.sizes.join(' · ')
+              : typeof product.sizes === 'string'
+              ? product.sizes.split(',').map(s => s.trim()).filter(Boolean).join(' · ')
+              : 'Free Size'}
           </div>
         </div>
 
@@ -185,9 +197,9 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
             <span className="tabular-nums">
               {formatPrice(product.sellingPrice)}
             </span>
-            {product.originalPrice > product.sellingPrice && (
+            {((product.originalPrice ?? product.mrp ?? 0) > product.sellingPrice) && (
               <span className="text-[11px] sm:text-xs text-neutral-400 line-through tabular-nums font-normal">
-                {formatPrice(product.originalPrice)}
+                {formatPrice(product.originalPrice ?? product.mrp ?? product.sellingPrice)}
               </span>
             )}
           </div>

@@ -3,16 +3,16 @@ export interface Product {
   name: string;
   category: string;
   sellingPrice: number;
-  originalPrice: number;
+  originalPrice?: number;
   mrp?: number;
   discountPercent: number;
-  sizes: string[];
+  sizes: string[] | string;
   stock: number;
-  inStock: boolean;
+  inStock?: boolean;
   isOutOfStock?: boolean;
   image: string;
   description: string;
-  tags: string[];
+  tags?: string[] | string;
   specs?: { label: string; value: string }[];
 }
 

@@ -106,9 +106,14 @@ function ProductModalInner({ product, onClose }: { product: Product; onClose: ()
 
   // Parse multi-size string into individual selectable tokens
   const availableSizes = useMemo(() => {
-    if (!product.sizes || product.sizes.length === 0) return ['Free Size'];
+    if (!product.sizes) return ['Free Size'];
+    const rawList = Array.isArray(product.sizes)
+      ? product.sizes
+      : typeof product.sizes === 'string'
+      ? product.sizes.split(',')
+      : ['Free Size'];
     const flattened: string[] = [];
-    product.sizes.forEach(s => {
+    rawList.forEach(s => {
       flattened.push(...parseSizes(s));
     });
     return flattened.length > 0 ? Array.from(new Set(flattened)) : ['Free Size'];

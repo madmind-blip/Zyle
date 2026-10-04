@@ -109,7 +109,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
 
-    const chosenSize = size || (product.sizes.length > 0 ? product.sizes[0] : 'Free Size');
+    const defaultSize = Array.isArray(product.sizes)
+      ? product.sizes[0] || 'Free Size'
+      : typeof product.sizes === 'string'
+      ? product.sizes.split(',')[0]?.trim() || 'Free Size'
+      : 'Free Size';
+    const chosenSize = size || defaultSize;
     const cleanFitNote = customFitNote?.trim() || '';
     const itemId = cleanFitNote ? `${product.id}-${chosenSize}-${cleanFitNote.slice(0, 12)}` : `${product.id}-${chosenSize}`;
 

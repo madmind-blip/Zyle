@@ -58,7 +58,11 @@ export default function Navbar({
         p =>
           p.name.toLowerCase().includes(q) ||
           p.category.toLowerCase().includes(q) ||
-          (p.tags && p.tags.some(t => t.toLowerCase().includes(q)))
+          (Array.isArray(p.tags)
+            ? p.tags.some(t => t.toLowerCase().includes(q))
+            : typeof p.tags === 'string'
+            ? p.tags.toLowerCase().includes(q)
+            : false)
       )
       .slice(0, 5);
   }, [searchValue, products]);

@@ -98,7 +98,12 @@ export default function WishlistDrawer({ products }: WishlistDrawerProps) {
                   <div className="flex flex-col gap-1 items-end">
                     <button
                       onClick={() => {
-                        addToCart(product, product.sizes[0] || 'Free Size', 1);
+                        const targetSize = Array.isArray(product.sizes)
+                          ? product.sizes[0] || 'Free Size'
+                          : typeof product.sizes === 'string'
+                          ? product.sizes.split(',')[0]?.trim() || 'Free Size'
+                          : 'Free Size';
+                        addToCart(product, targetSize, 1);
                       }}
                       className="px-2.5 py-1.5 bg-[#111111] hover:bg-neutral-800 text-white rounded-md text-[11px] font-medium flex items-center gap-1 transition-colors"
                     >
